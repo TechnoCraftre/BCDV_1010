@@ -1,0 +1,94 @@
+const SimpleStorage = artifacts.require("SimpleStorage");
+
+contract('SimpleStorage', (acc) => {
+
+  it('should read newly written values', async() => {
+    const simpleStorageInstance = await SimpleStorage.deployed();
+
+    console.log(acc);
+    var value = (await simpleStorageInstance.read.call()).toNumber();
+
+    assert.equal(value, 0, "0 wasn't the initial value");
+
+    await simpleStorageInstance.write(1);
+    value = (await simpleStorageInstance.read.call()).toNumber();
+    assert.equal(value, 1, "1 was not written");
+
+    await simpleStorageInstance.write(2);
+    value = (await simpleStorageInstance.read.call()).toNumber();
+
+    assert.equal(value, 2, "2 was not written");
+
+  });
+
+  it('should send coin correctly', async () => {
+    const simpleStorageInstance = await SimpleStorage.deployed();
+
+    
+    const accOne = acc[0];
+    const accTwo = acc[1];
+
+    
+    const accOneStartingBalance = (await simpleStorageInstance.getBalance.call(accOne)).toNumber();
+    const accTwoStartingBalance = (await simpleStorageInstance.getBalance.call(accTwo)).toNumber();
+
+    
+    const amount = 1000;
+    await simpleStorageInstance.sendCoin(accTwo, amount, { from: accOne });
+
+    // Get balances of first and second account after the transactions.
+    const accOneEndingBalance = (await simpleStorageInstance.getBalance.call(accOne)).toNumber();
+    const accTwoEndingBalance = (await simpleStorageInstance.getBalance.call(accTwo)).toNumber();
+
+    assert.equal(accOneEndingBalance, accOneStartingBalance - amount, "Amount wasn't correctly taken from the sender");
+    assert.equal(accTwoEndingBalance, accTwoStartingBalance + amount, "Amount wasn't correctly sent to the receiver");
+  });
+
+
+  it('should send coin mutiple account correctly', async () => {
+    const simpleStorageInstance = await SimpleStorage.deployed();
+
+    // Setup 2 accounts.
+    const accountOne = acc[0];
+   
+    
+    for (let i = 1; i < 4; i++) {
+    
+
+    const accountOneStartingBalance = (await simpleStorageInstance.getBalance.call(acc[0])).toNumber();
+    const accountTwoStartingBalance = (await simpleStorageInstance.getBalance.call(acc[i])).toNumber();
+
+    // Make transaction from first account to anotherAccount.
+    const amount = 34;
+    await simpleStorageInstance.sendCoin(acc[i], amount, { from: accountOne });
+
+    const accountOneEndingBalance = (await simpleStorageInstance.getBalance.call(acc[0])).toNumber();
+    const accountTwoEndingBalance = (await simpleStorageInstance.getBalance.call(acc[i])).toNumber();
+
+    // Get balances of first and second account after the transactions.
+    assert.equal(accountOneEndingBalance, accountOneStartingBalance - amount, "Amount wasn't correctly taken from the sender");
+    assert.equal(accountTwoEndingBalance, accountTwoStartingBalance + amount, "Amount wasn't correctly sent to the receiver");
+
+    console.log(accountOneEndingBalance);
+    console.log(accountTwoEndingBalance);
+
+    }
+
+
+  });
+
+ 
+  it('should check account aadress correctly', async () => {
+    const simpleStorageInstance = await SimpleStorage.deployed();
+
+    // Setup 2 accounts.
+    const accountOne = acc[0];
+    
+    const checkAccout = (await simpleStorageInstance.isContract.call(acc[0]));
+    assert.equal(checkAccout, false, "invaild account");
+
+
+  });
+
+
+});
